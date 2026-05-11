@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0D1117">
+<link rel="icon" href="trailar_icon.png">
+<link rel="apple-touch-icon" href="trailar_icon.png">
+<title>TrailAR</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0D1117; font-family: Georgia, serif; color: #E8E0D4; }
+  input[type=range] { accent-color: #7EC88A; width: 100%; }
+  select { appearance: none; -webkit-appearance: none; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0D1117; }
+  ::-webkit-scrollbar-thumb { background: #2A3A2A; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const { useState, useMemo } = React;
+
+const CARRERAS = [
+  // MAYO
+  { id: 101, nombre: "Champa Ultra Race", fecha: "2026-05-01", mes: "Mayo", provincia: "Córdoba", lugar: "San Javier, Traslasierra", distancias: [60, 42, 30, 24, 16, 10], web: "https://calendario.trailrunning.ar/carreras/champa-ultra-race/", precioRef: "A confirmar", kmBsAs: 780, termas: false, cada: false },
+  { id: 109, nombre: "Tandil Adventure", fecha: "2026-05-02", mes: "Mayo", provincia: "Buenos Aires", lugar: "Tandil", distancias: [35, 20, 10], web: "https://gruposafe.ar/tandil-adventure", precioRef: "A confirmar", kmBsAs: 350, termas: false, cada: false },
+  { id: 108, nombre: "Raid Columbia", fecha: "2026-05-09", mes: "Mayo", provincia: "Salta", lugar: "Salta", distancias: [36], web: "https://calendario.trailrunning.ar/carreras/raid-columbia/", precioRef: "A confirmar", kmBsAs: 1500, termas: false, cada: false },
+  { id: 106, nombre: "Pampa Rural Trail", fecha: "2026-05-17", mes: "Mayo", provincia: "Buenos Aires", lugar: "Brandsen", distancias: [25, 15, 8], web: null, precioRef: "A confirmar", kmBsAs: 80, termas: false, cada: false },
+  // JUNIO
+  { id: 201, nombre: "Merlo Trail Ultra", fecha: "2026-06-05", mes: "Junio", provincia: "San Luis", lugar: "Villa de Merlo", distancias: [56, 37, 22, 11, 6], web: "https://ultratrailmerlo.com.ar/", precioRef: "A confirmar", kmBsAs: 900, termas: false, cada: true },
+  { id: 202, nombre: "RunningTrip San Lorenzo", fecha: "2026-06-18", mes: "Junio", provincia: "Salta", lugar: "San Lorenzo", distancias: [35, 21, 10, 5], web: "https://calendario.trailrunning.ar/carreras/runningtrip/", precioRef: "A confirmar", kmBsAs: 1480, termas: false, cada: false },
+  { id: 204, nombre: "K Series Tandil", fecha: "2026-06-20", mes: "Junio", provincia: "Buenos Aires", lugar: "Tandil", distancias: [21, 10], web: "https://argentina.kseries.com.ar/tandil/", precioRef: "A confirmar", kmBsAs: 350, termas: false, cada: false },
+  { id: 203, nombre: "Turmalina Ultra Run", fecha: "2026-06-26", mes: "Junio", provincia: "Córdoba", lugar: "La Falda", distancias: [66, 51, 36, 21, 11, 6], web: "https://calendario.trailrunning.ar/carreras/turmalina-ultra-run/", precioRef: "A confirmar", kmBsAs: 700, termas: false, cada: false },
+  // JULIO
+  { id: 301, nombre: "Vuelta al Lago Epecuén", fecha: "2026-07-12", mes: "Julio", provincia: "Buenos Aires", lugar: "Carhué", distancias: [60, 21, 10], web: "https://calendario.trailrunning.ar/carreras/vuelta-al-lago-epecuen/", precioRef: "A confirmar", kmBsAs: 530, termas: false, cada: false },
+  // AGOSTO
+  { id: 2, nombre: "Cordillera de la Selva", fecha: "2026-08-02", mes: "Agosto", provincia: "Misiones", lugar: "Dos de Mayo", distancias: [43, 25, 15, 7], web: null, precioRef: "A confirmar", kmBsAs: 1100, termas: false, cada: false },
+  { id: 4, nombre: "Ultra Champaquí", fecha: "2026-08-08", mes: "Agosto", provincia: "Córdoba", lugar: "La Cumbrecita", distancias: [50, 35, 21, 12], web: "https://calendario.trailrunning.ar/carreras/ultra-champa/", precioRef: "A confirmar", kmBsAs: 720, termas: false, cada: false },
+  { id: 401, nombre: "Tandil Ultra Trail", fecha: "2026-08-09", mes: "Agosto", provincia: "Buenos Aires", lugar: "Tandil", distancias: [50, 25, 12.5], web: "https://perfilextremo.com/project/tandil-ultra-trail", precioRef: "$90.000 (12.5k)", kmBsAs: 350, termas: false, cada: false },
+  { id: 1, nombre: "Rocha Trail", fecha: "2026-08-09", mes: "Agosto", provincia: "Entre Ríos", lugar: "Villa Elisa", distancias: [30, 21, 15, 7], web: null, precioRef: "A confirmar", kmBsAs: 470, termas: true, cada: false },
+  { id: 5, nombre: "Cosquín Trail", fecha: "2026-08-15", mes: "Agosto", provincia: "Córdoba", lugar: "Cosquín", distancias: [50, 36, 26, 16], web: null, precioRef: "A confirmar", kmBsAs: 700, termas: false, cada: false },
+  { id: 7, nombre: "Chicoana Ultra Trail", fecha: "2026-08-17", mes: "Agosto", provincia: "Salta", lugar: "Chicoana", distancias: [30, 21, 14, 7, 3], web: "https://calendario.trailrunning.ar/carreras/chicoana-ultra-trail/", precioRef: "A confirmar", kmBsAs: 1500, termas: false, cada: false },
+  { id: 8, nombre: "Trail del Agrio", fecha: "2026-08-23", mes: "Agosto", provincia: "Neuquén", lugar: "Caviahue", distancias: [21, 10], web: "https://calendario.trailrunning.ar/carreras/trail-del-agrio/", precioRef: "A confirmar", kmBsAs: 1350, termas: false, cada: false },
+  { id: 403, nombre: "Desafío UTU Capilla del Monte", fecha: "2026-08-29", mes: "Agosto", provincia: "Córdoba", lugar: "Capilla del Monte", distancias: [70, 55, 35, 28, 20, 10], web: null, precioRef: "A confirmar", kmBsAs: 720, termas: false, cada: false },
+  // SEPTIEMBRE
+  { id: 11, nombre: "MariMenuco Run", fecha: "2026-09-06", mes: "Septiembre", provincia: "Neuquén", lugar: "Mari Menuco", distancias: [25, 15, 8], web: "https://calendario.trailrunning.ar/carreras/marimenuco-run/", precioRef: "A confirmar", kmBsAs: 1250, termas: false, cada: false },
+  { id: 12, nombre: "Destino Madryn", fecha: "2026-09-06", mes: "Septiembre", provincia: "Chubut", lugar: "Puerto Madryn", distancias: [50, 35, 25, 15, 6], web: null, precioRef: "A confirmar", kmBsAs: 1400, termas: false, cada: false },
+  { id: 13, nombre: "Extremo Tucumán Tafí", fecha: "2026-09-11", mes: "Septiembre", provincia: "Tucumán", lugar: "Tafí del Valle", distancias: [75, 45, 21, 10, 6], web: null, precioRef: "A confirmar", kmBsAs: 1300, termas: false, cada: false },
+  { id: 10, nombre: "New Balance All Terrain Tandil", fecha: "2026-09-14", mes: "Septiembre", provincia: "Buenos Aires", lugar: "Tandil", distancias: [30, 20, 10], web: "https://calendario.trailrunning.ar/carreras/new-balance-all-terrain-tandil/", precioRef: "~$80-100k (10k)", kmBsAs: 350, termas: false, cada: false },
+  { id: 14, nombre: "El Rodeo Trail Run", fecha: "2026-09-14", mes: "Septiembre", provincia: "Catamarca", lugar: "El Rodeo", distancias: [21, 15, 7], web: null, precioRef: "A confirmar", kmBsAs: 1200, termas: false, cada: false },
+  { id: 17, nombre: "Ultra Odissea", fecha: "2026-09-20", mes: "Septiembre", provincia: "Entre Ríos", lugar: "Paraná", distancias: [60, 38, 21, 10, 7], web: "https://calendario.trailrunning.ar/carreras/ultra-odissea/", precioRef: "A confirmar", kmBsAs: 450, termas: false, cada: false },
+  { id: 15, nombre: "Trail de Fuego", fecha: "2026-09-21", mes: "Septiembre", provincia: "Río Negro", lugar: "Dina Huapi", distancias: [32, 20, 12, 6], web: "https://calendario.trailrunning.ar/carreras/trail-de-fuego/", precioRef: "A confirmar", kmBsAs: 1600, termas: false, cada: true },
+  { id: 9, nombre: "Natural Race Mendoza", fecha: "2026-09-27", mes: "Septiembre", provincia: "Mendoza", lugar: "Mendoza", distancias: [25, 15, 8], web: "https://calendario.trailrunning.ar/carreras/natural-race/", precioRef: "A confirmar", kmBsAs: 1050, termas: false, cada: false },
+  { id: 16, nombre: "Isquitipe SolLuna", fecha: "2026-09-27", mes: "Septiembre", provincia: "Córdoba", lugar: "Río Ceballos", distancias: [22, 12], web: "https://calendario.trailrunning.ar/carreras/isquitipe-solluna/", precioRef: "A confirmar", kmBsAs: 680, termas: false, cada: false },
+  // OCTUBRE
+  { id: 22, nombre: "Héroes Raid Series", fecha: "2026-10-03", mes: "Octubre", provincia: "Buenos Aires", lugar: "Tandil — Cerro El Centinela", distancias: [40, 20, 10], web: "https://gruposafe.ar/heroes-raid-series/", precioRef: "A confirmar", kmBsAs: 350, termas: false, cada: false },
+  { id: 18, nombre: "UTACCH Amanecer Comechingón", fecha: "2026-10-09", mes: "Octubre", provincia: "Córdoba", lugar: "Yacanto de Calamuchita", distancias: [160, 100, 75, 55, 38, 26, 15], web: "https://www.utacchultratrail.com", precioRef: "~$175.000 (15k)", kmBsAs: 850, termas: false, cada: false },
+  { id: 600, nombre: "Trail del Viento", fecha: "2026-10-10", mes: "Octubre", provincia: "Neuquén", lugar: "Andacollo", distancias: [42, 25, 10], web: "https://calendario.trailrunning.ar/carreras/trail-del-viento-2/", precioRef: "A confirmar", kmBsAs: 1350, termas: false, cada: false },
+  { id: 19, nombre: "Ultra Trail Tierras del Diablo", fecha: "2026-10-11", mes: "Octubre", provincia: "Buenos Aires", lugar: "Balcarce", distancias: [50, 25, 11], web: null, precioRef: "A confirmar", kmBsAs: 390, termas: false, cada: false },
+  { id: 601, nombre: "QHAPAQÑAN Trail Cafayate", fecha: "2026-10-11", mes: "Octubre", provincia: "Salta", lugar: "Cafayate", distancias: [42, 22, 15, 9], web: "https://calendario.trailrunning.ar/carreras/qhapaqnan-trail/", precioRef: "A confirmar", kmBsAs: 1550, termas: false, cada: false },
+  // NOVIEMBRE
+  { id: 20, nombre: "Atlántica Ultramaratón", fecha: "2026-11-22", mes: "Noviembre", provincia: "Buenos Aires", lugar: "Mar del Plata", distancias: [100, 70, 25], web: null, precioRef: "A confirmar", kmBsAs: 400, termas: false, cada: false },
+  { id: 21, nombre: "Oro Verde Trail Run", fecha: "2026-11-29", mes: "Noviembre", provincia: "Entre Ríos", lugar: "Oro Verde", distancias: [21, 10, 7], web: null, precioRef: "A confirmar", kmBsAs: 440, termas: false, cada: false },
+  // DICIEMBRE
+  { id: 801, nombre: "Ushuaia Trail Race", fecha: "2026-12-11", mes: "Diciembre", provincia: "Tierra del Fuego", lugar: "Ushuaia", distancias: [42, 21, 15, 9], web: "https://ushuaiatrailrace.com", precioRef: "A confirmar", kmBsAs: 3100, termas: false, cada: false },
+  { id: 803, nombre: "Desafío Wayra", fecha: "2026-12-13", mes: "Diciembre", provincia: "Río Negro", lugar: "El Bolsón", distancias: [50, 35, 25, 15, 8], web: "https://calendario.trailrunning.ar/carreras/desafio-wayra/", precioRef: "A confirmar", kmBsAs: 1750, termas: false, cada: false },
+];
+
+const MESES = ["Todos","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const PROVINCIAS = ["Todas",...Array.from(new Set(CARRERAS.map(c=>c.provincia))).sort()];
+const PRECIO_NAFTA = 2100;
+const COLORES_MES = { Mayo:"#4A7A3A", Junio:"#3A6A5A", Julio:"#2A5A6A", Agosto:"#2A6B4F", Septiembre:"#1A5C8A", Octubre:"#8A4A1A", Noviembre:"#5A1A6B", Diciembre:"#6B1A2A" };
+const FINDES_LARGOS = ["2026-10-11","2026-11-22"];
+
+function litros(km){ return Math.round(km*2/12); }
+function nafta(km){ return litros(km)*PRECIO_NAFTA; }
+function fmt(str){
+  const d=new Date(str+"T12:00:00");
+  return d.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"long"});
+}
+
+function App(){
+  const [mes,setMes]=useState("Todos");
+  const [prov,setProv]=useState("Todas");
+  const [distMax,setDistMax]=useState(200);
+  const [domingos,setDomingos]=useState(false);
+  const [finde,setFinde]=useState(false);
+  const [cadaOnly,setCadaOnly]=useState(false);
+  const [guardadas,setGuardadas]=useState([]);
+  const [vista,setVista]=useState("buscar");
+  const [abierta,setAbierta]=useState(null);
+
+  const filtradas=useMemo(()=>CARRERAS.filter(c=>{
+    if(mes!=="Todos"&&c.mes!==mes)return false;
+    if(prov!=="Todas"&&c.provincia!==prov)return false;
+    if(Math.min(...c.distancias)>distMax)return false;
+    if(domingos&&new Date(c.fecha+"T12:00:00").getDay()!==0)return false;
+    if(finde&&!FINDES_LARGOS.includes(c.fecha))return false;
+    if(cadaOnly&&!c.cada)return false;
+    return true;
+  }).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha)),[mes,prov,distMax,domingos,finde,cadaOnly]);
+
+  const misData=CARRERAS.filter(c=>guardadas.includes(c.id)).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
+
+  function toggle(id){ setGuardadas(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]); }
+
+  const S={ // styles shorthand
+    page:{ minHeight:"100vh", background:"#0D1117", fontFamily:"Georgia,serif", color:"#E8E0D4" },
+    header:{ background:"linear-gradient(135deg,#0D1117,#1A2A1A,#0D1117)", borderBottom:"1px solid #2A3A2A", padding:"16px 16px 0", position:"sticky", top:0, zIndex:100 },
+    card:{ background:"#161D1A", border:"1px solid #1E2E1E", borderRadius:10, padding:14, marginBottom:10, cursor:"pointer" },
+    tag:(on)=>({ fontSize:10, padding:"2px 7px", borderRadius:12, border:`1px solid ${on?"#2A5A3A":"#2A2A3A"}`, background:on?"#1A3A2A":"#1A1A2A", color:on?"#7EC88A":"#445566", fontWeight:on?"bold":"normal" }),
+    btn:(on)=>({ background:on?"#2A6B4F":"transparent", border:`1px solid ${on?"#7EC88A":"#2A3A2A"}`, color:on?"#7EC88A":"#445544", borderRadius:20, padding:"5px 13px", fontSize:12, cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }),
+    toggle:(on)=>({ width:38, height:22, borderRadius:11, background:on?"#2A6B4F":"#1A2A1A", border:`1px solid ${on?"#7EC88A":"#2A3A2A"}`, position:"relative", cursor:"pointer", flexShrink:0 }),
+    dot:(on)=>({ position:"absolute", top:3, left:on?19:3, width:14, height:14, borderRadius:"50%", background:on?"#7EC88A":"#334433", transition:"left .2s" }),
+    infoBox:{ background:"#0D1117", borderRadius:8, padding:10 },
+    label:{ fontSize:10, color:"#445544", letterSpacing:1, textTransform:"uppercase", marginBottom:5 },
+  };
+
+  function Toggle({val,set,label}){
+    return(
+      <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:12,color:val?"#7EC88A":"#667766"}}>
+        <div style={S.toggle(val)} onClick={()=>set(!val)}><div style={S.dot(val)}/></div>
+        {label}
+      </label>
+    );
+  }
+
+  return(
+    <div style={S.page}>
+      {/* HEADER */}
+      <div style={S.header}>
+        <div style={{maxWidth:700,margin:"0 auto"}}>
+          <div style={{display:"flex",alignItems:"baseline",gap:10,marginBottom:4}}>
+            <span style={{fontSize:26,fontWeight:"bold",color:"#7EC88A",letterSpacing:-1}}>⛰ TrailAR</span>
+            <span style={{fontSize:12,color:"#445544",fontStyle:"italic"}}>Argentina 2026</span>
+          </div>
+          <div style={{display:"flex",gap:4,marginTop:10}}>
+            {[["buscar","🔍 Buscar"],["calendario",`📅 Mis Carreras${guardadas.length?` (${guardadas.length})`:""}`]].map(([id,lbl])=>(
+              <button key={id} onClick={()=>setVista(id)} style={{
+                background:vista===id?"#7EC88A":"transparent", color:vista===id?"#0D1117":"#7EC88A",
+                border:"1px solid #2A4A2A", padding:"8px 16px", cursor:"pointer", fontSize:12,
+                fontFamily:"inherit", borderRadius:"6px 6px 0 0", fontWeight:vista===id?"bold":"normal"
+              }}>{lbl}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{maxWidth:700,margin:"0 auto",padding:"16px 12px"}}>
+
+        {/* ===== BUSCAR ===== */}
+        {vista==="buscar"&&<>
+          {/* FILTROS */}
+          <div style={{background:"#161D1A",border:"1px solid #2A3A2A",borderRadius:12,padding:16,marginBottom:16}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              {[["Mes",MESES,mes,setMes],["Provincia",PROVINCIAS,prov,setProv]].map(([lbl,opts,val,set])=>(
+                <div key={lbl}>
+                  <div style={S.label}>{lbl}</div>
+                  <select value={val} onChange={e=>set(e.target.value)} style={{width:"100%",background:"#0D1117",color:"#E8E0D4",border:"1px solid #2A3A2A",borderRadius:6,padding:"7px 8px",fontSize:13,fontFamily:"inherit"}}>
+                    {opts.map(o=><option key={o}>{o}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <div style={{marginBottom:12}}>
+              <div style={S.label}>Distancia máxima: <span style={{color:"#7EC88A"}}>{distMax===200?"Todas":`≤${distMax}k`}</span></div>
+              <input type="range" min={5} max={200} step={5} value={distMax} onChange={e=>setDistMax(+e.target.value)}/>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#334433",marginTop:2}}>
+                <span>5k</span><span>25k</span><span>50k</span><span>100k+</span>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
+              <Toggle val={domingos} set={setDomingos} label="Solo domingos"/>
+              <Toggle val={finde} set={setFinde} label="🗓 Finde largo"/>
+              <Toggle val={cadaOnly} set={setCadaOnly} label="⭐ CADA"/>
+            </div>
+          </div>
+
+          <div style={{fontSize:11,color:"#445544",marginBottom:10}}>{filtradas.length} carrera{filtradas.length!==1?"s":""} encontrada{filtradas.length!==1?"s":""}</div>
+
+          {filtradas.map(c=>{
+            const saved=guardadas.includes(c.id);
+            const esFL=FINDES_LARGOS.includes(c.fecha);
+            const cortas=c.distancias.filter(d=>d<=25);
+            const open=abierta===c.id;
+            return(
+              <div key={c.id} style={{...S.card, borderLeft:`4px solid ${COLORES_MES[c.mes]||"#334433"}`, border:`1px solid ${saved?"#2A6B4F":"#1E2E1E"}`, borderLeftWidth:4}} onClick={()=>setAbierta(open?null:c.id)}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:5,marginBottom:3}}>
+                      <span style={{fontWeight:"bold",fontSize:14,color:"#C8E0C0"}}>{c.nombre}</span>
+                      {esFL&&<span style={{fontSize:9,background:"#3A2A00",color:"#FFB84A",padding:"2px 5px",borderRadius:3,border:"1px solid #6A4A00",whiteSpace:"nowrap"}}>🗓 FINDE LARGO</span>}
+                      {c.termas&&<span style={{fontSize:9,background:"#002A3A",color:"#4ABFFF",padding:"2px 5px",borderRadius:3,border:"1px solid #005A7A"}}>♨️ Termas</span>}
+                      {c.cada&&<span style={{fontSize:9,background:"#2A2A00",color:"#FFE84A",padding:"2px 5px",borderRadius:3,border:"1px solid #6A6A00"}}>⭐ CADA</span>}
+                    </div>
+                    <div style={{fontSize:11,color:"#667766",marginBottom:6}}>📍 {c.lugar}, {c.provincia} · {fmt(c.fecha)}</div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                      {c.distancias.map(d=><span key={d} style={S.tag(d<=25)}>{d}k</span>)}
+                    </div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:5}}>
+                    <button style={S.btn(saved)} onClick={e=>{e.stopPropagation();toggle(c.id);}}>{saved?"✓ Guardada":"+ Guardar"}</button>
+                    <span style={{fontSize:10,color:"#445544"}}>🚗 {c.kmBsAs}km</span>
+                  </div>
+                </div>
+
+                {open&&<div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #1E2E1E",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  <div style={S.infoBox}>
+                    <div style={S.label}>💰 Inscripción</div>
+                    <div style={{fontSize:13,color:"#C8E0C0"}}>{c.precioRef}</div>
+                  </div>
+                  <div style={S.infoBox}>
+                    <div style={S.label}>⛽ Nafta ida/vuelta</div>
+                    <div style={{fontSize:13,color:"#C8E0C0"}}>${nafta(c.kmBsAs).toLocaleString("es-AR")}</div>
+                    <div style={{fontSize:10,color:"#445544"}}>{litros(c.kmBsAs)}L · $2.100/L</div>
+                  </div>
+                  <div style={S.infoBox}>
+                    <div style={S.label}>🏃 Dist. ≤25k</div>
+                    <div style={{fontSize:13,color:"#7EC88A"}}>{cortas.length>0?cortas.map(d=>`${d}k`).join(" · "):"—"}</div>
+                  </div>
+                  <div style={S.infoBox}>
+                    <div style={S.label}>🏠 Alojamiento</div>
+                    <div style={{fontSize:12,color:"#C8E0C0"}}>{c.kmBsAs<500?"Zona accesible":c.kmBsAs<900?"1-2 noches":"2-3 noches"}</div>
+                  </div>
+                  {c.web&&<div style={{gridColumn:"1/-1"}}>
+                    <a href={c.web} target="_blank" rel="noreferrer" style={{display:"inline-block",background:"#1A3A2A",color:"#7EC88A",padding:"7px 14px",borderRadius:6,fontSize:12,textDecoration:"none",border:"1px solid #2A5A3A"}} onClick={e=>e.stopPropagation()}>🔗 Sitio oficial</a>
+                  </div>}
+                </div>}
+              </div>
+            );
+          })}
+
+          {filtradas.length===0&&<div style={{textAlign:"center",padding:40,color:"#445544",fontStyle:"italic"}}>No hay carreras con esos filtros</div>}
+        </>}
+
+        {/* ===== MIS CARRERAS ===== */}
+        {vista==="calendario"&&<>
+          {misData.length===0
+            ?<div style={{textAlign:"center",padding:60,color:"#445544"}}>
+              <div style={{fontSize:36,marginBottom:10}}>⛰</div>
+              <div style={{fontStyle:"italic",marginBottom:6}}>Todavía no guardaste ninguna carrera.</div>
+              <div style={{fontSize:12}}>Usá el botón "+ Guardar" en la pestaña Buscar.</div>
+            </div>
+            :<>
+              <div style={{background:"#161D1A",border:"1px solid #2A3A2A",borderRadius:12,padding:14,marginBottom:14,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center"}}>
+                <div><div style={{fontSize:22,color:"#7EC88A",fontWeight:"bold"}}>{misData.length}</div><div style={{fontSize:10,color:"#445544"}}>carreras</div></div>
+                <div><div style={{fontSize:15,color:"#FFB84A",fontWeight:"bold"}}>${misData.reduce((s,c)=>s+nafta(c.kmBsAs),0).toLocaleString("es-AR")}</div><div style={{fontSize:10,color:"#445544"}}>total nafta</div></div>
+                <div><div style={{fontSize:15,color:"#4ABFFF",fontWeight:"bold"}}>{(misData.reduce((s,c)=>s+c.kmBsAs*2,0)).toLocaleString("es-AR")}km</div><div style={{fontSize:10,color:"#445544"}}>km totales</div></div>
+              </div>
+              {misData.map(c=>(
+                <div key={c.id} style={{background:"#161D1A",borderLeft:`4px solid ${COLORES_MES[c.mes]||"#334433"}`,border:"1px solid #2A3A2A",borderRadius:10,padding:14,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                  <div>
+                    <div style={{fontWeight:"bold",color:"#C8E0C0",fontSize:13,marginBottom:3}}>{c.nombre}</div>
+                    <div style={{fontSize:11,color:"#667766"}}>{fmt(c.fecha)} · {c.lugar}</div>
+                    <div style={{fontSize:11,color:"#556655",marginTop:4}}>⛽ ${nafta(c.kmBsAs).toLocaleString("es-AR")} · 🚗 {c.kmBsAs}km</div>
+                    {FINDES_LARGOS.includes(c.fecha)&&<div style={{fontSize:10,color:"#FFB84A",marginTop:3}}>🗓 Finde largo</div>}
+                  </div>
+                  <button onClick={()=>toggle(c.id)} style={{background:"transparent",border:"1px solid #3A2A2A",color:"#884444",borderRadius:6,padding:"4px 10px",fontSize:12,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>✕</button>
+                </div>
+              ))}
+            </>
+          }
+        </>}
+
+      </div>
+      <div style={{textAlign:"center",padding:"16px 0 28px",fontSize:10,color:"#334433"}}>
+        TrailAR · Datos relevados mayo 2026 · Precios referenciales
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body>
+</html>
